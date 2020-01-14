@@ -1,0 +1,181 @@
+set TIME := 1995 2005 2015 2025 2035 2045 2055 2065; # 2075;
+#set TIME := 1995 2000 2005 2010 2015 2020 2025 2030 2035 2040 2045; # 2055 2065; # 2075;
+
+set TECH := convcoal convoil convgas gasturb hydro nuclear advcoal ccgt wind pv fc pvh2;
+set FUEL := coal oil gas uran ren;
+set REGION := north west south east;
+
+param years := 10;	# years per period
+param eps := 1e-8;	# small number
+param dr := 0.05;	# discount rate
+
+param market_growth := 0.3;	# maximum yearly market growth
+param max_intermittent := 0.3;	# maximum intermittent energy contribution
+param total_CO2_limit := 9999;	# 1995 emissions = 5.85 (5.85*60 = 351)
+param max_cuminvcost := 40000;	# upper limit for cum_invcost variable (for scaling)
+
+param fuel_tech default 0 :=
+	coal convcoal 1		coal advcoal 1
+	oil convoil 1		oil gasturb 1
+	gas convgas 1		gas ccgt 1	gas fc 1
+	uran nuclear 1
+	ren hydro 1		ren pv 1	ren wind 1	ren pvh2 1  ;
+
+#fuelcell:	4500 = 3000 * 1.5 (for replacement of short-lived stack)
+#pvh2:		15.1 = 8 + 5 (pv) + 15/7 (fc)
+#			$/kW	   $/kW/year  $/MWh
+param:    lifetime  base_invcost  fixed_cost var_cost efficiency  :=
+convcoal	30	1300		30	4	0.38
+convoil		30	800		15	1	0.36
+convgas		30	750		15	1	0.36
+gasturb		30	400		10	1	0.32
+hydro		50	2500		30	0	1
+nuclear		30	2500		50	2	1
+advcoal		30	1400		30	5	0.45
+ccgt		30	800		20	3	0.50
+wind		30	1200		24	0	1
+pv		30	7000		5	0	1
+fc		30	4500		15	2	0.60
+pvh2		30	550		15.1	2	1	;
+
+# high_exper 2045: nuclear 4 advcoal 4 ccgt 4 wind 3.5 pv 6 fc 4.5 pvh2 3
+# high_exper 2065: double
+param:     progress_ratio  npieces  high_exper  max_exper  intermittent  :=
+convcoal	1.00		1	5000	30000		0
+convoil		1.00		1	5000	30000		0
+convgas		1.00		1	5000	30000		0
+gasturb		1.00		1	8000	30000		0
+hydro		1.00		1	5000	30000		0
+nuclear		1.00		1	6000	30000		0
+advcoal		0.95		6	4000	30000		0
+ccgt		0.88		6	4000	30000		0
+wind		0.88		6	5000	30000		0.2
+pv		0.82		10	40000	70000		0.2
+fc		0.85		6	5000	30000		0
+pvh2		0.85		8	30000	50000		0	;
+
+# Starting capacity modified somewhat (calibrated to generation in 1995)
+#
+#			GW
+param start_capac:
+		north	west	south	east	:=
+convcoal	35	339	33	130
+convoil		35	272	92	83
+convgas		32	82	45	13
+gasturb		35	271	92	83
+hydro		117	128	104	54
+nuclear		43	269	5	17
+advcoal		5	120	5	10
+ccgt		30	70	15	35
+wind		.7	3.6	.1	.6
+pv		.01	.27	.01	.01
+fc		.05	.19	.01	.05
+pvh2		.8	2	.4	.8	;
+
+#			TWh		1995 to 2020	2020-2050	2050-
+param:			demand_start	demand_growth1	demand_growth2  demand_growth3	:=
+	north		1592		.023		.012		.012
+	west		6619		.019		.012		.012
+	south		1453		.028		.024		.012
+	east		1709		.052		.024		.012;
+
+param savings := 0;		# annual demand-side efficiency improvements
+param dist_efficiency := .903;	# world consumption/generation 1995
+param peak_multiplier := 1.5;	# (reserve capacity included)
+
+#avail(pvh2) = avail(pv) * 0.9 * 0.7 (efficiencies for electrolysis & fuel cell)
+param other_availability:
+		north	west	south	east	:=
+convcoal	.75	.75	.75	.75
+convoil		.8	.8	.8	.8
+convgas		.8	.8	.8	.8
+gasturb		.8	.8	.8	.8
+hydro		.7	.7	.7	.7
+nuclear		.75	.75	.75	.75
+advcoal		.8	.8	.8	.8
+ccgt		.8	.8	.8	.8
+wind		.3	.3	.3	.3
+pv		.125	.181	.220	.180	#load curve weighted pv_avail
+fc		.8	.8	.8	.8
+pvh2		.079	.114	.139	.113	;
+#pv		.14	.18	.22	.18	; #average pv_avail;
+
+param nfuel := 10;
+#
+# prices in $/MWh
+#
+# p1 = start price	p2 = price when reserves exhausted (linear increase)
+#
+#	100%:  7.5 16.1 12.5 11.4	50%:  6.0 12.6 9.65 9.55
+#
+#	max_fueluse 2,3,3,1
+#
+param:	p1	p2	   max_fueluse	:=
+coal	4.5	12.1		2
+oil	9.1	14.7		4
+gas	6.8	10.1		6
+uran	7.8	11.0		1
+ren	0	0		23	;
+
+# All of FSU in north, uranium guessed for Canada/USA, East low. (PWh)
+param fuel_reserves:
+	north	west	south	east	:=	#	sum
+coal	1182	2352	491	1185		#	5210
+oil	353	54	1283	82		#	1772
+gas	603	111	607	83		#	1404
+uran	266	210	178	4		#	 658
+ren	2323	2323	2323	2323	;
+
+# (TWh)
+#
+param non_electric_start:
+	north	west	south	east	:=
+coal	1160	2810	1330	7130
+oil	3250	21120	7130	6000
+gas	3490	9250	2730	830
+uran	0	0	0	0
+ren	0	0	0	0	;
+
+# Annual average growth rates to 2020
+param non_electric_growth1:
+	north	west	south	east	:=
+coal	.001	.001	.02	.02
+oil	.009	.009	.03	.03
+gas	.016	.016	.031	.031
+uran	0	0	0	0
+ren	0	0	0	0	;
+
+# Annual average growth rates, 2020-2050
+param non_electric_growth2:
+	north	west	south	east	:=
+coal	0	0	.01	.01
+oil	0	0	.01	.01
+gas	.01	.01	.02	.02
+uran	0	0	0	0
+ren	0	0	0	0	;
+
+param non_electric_growth3 := 0;
+
+# ton/MWh (93,78,55 g/MJbr)
+param fuel_co2 :=
+	coal	.3348
+	oil	.2808
+	gas	.1980
+	uran	0
+	ren	0	;
+
+# TWh/year
+param potential:
+		north	west	south	east	:=
+convcoal	0	0	0	0
+convoil		0	0	0	0
+convgas		0	0	0	0
+gasturb		0	0	0	0
+hydro		1520	1120	4490	1170
+nuclear		0	0	0	0
+advcoal		0	0	0	0
+ccgt		0	0	0	0
+wind		7680	7680	3040	820
+pv		0	0	0	0
+fc		0	0	0	0
+pvh2		0	0	0	0	;

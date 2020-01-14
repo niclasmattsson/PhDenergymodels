@@ -1,0 +1,122 @@
+option display_round 2;
+display exper;
+#display bpcuminvcost;
+
+#display sum {T in TIME} cost[T] / (1+dr)^(T-time0);
+
+option display_1col 0;
+option display_eps 1e-4;
+
+option display_round 2;
+
+display {r in REGION, t in TIME} demand[r,t];
+display {k in TECH, t in TIME}
+	sum {R in REGION} electricity[k,R,t];
+display {k in TECH, t in TIME} sum {R in REGION} capacity[k,R,t];
+#display {k in TECH, t in TIME} sum {R in REGION} invest[k,R,t];
+display electricity;
+display capacity;
+#display invest;
+display cum_fuelcost;
+display co2_emissions;
+display sum {t in TIME} years * co2_emissions[t];
+display bpexper;
+display bpinvcost;
+display bpcuminvcost;
+display cum_invcost;
+param tech_cost {k in TECH, t in TIME};
+param electric_fuelcost {f in FUEL, r in REGION, t in TIME};
+param nonelectric_fuelcost {f in FUEL, r in REGION, t in TIME};
+param fuelprices {f in FUEL, r in REGION, t in TIME};
+param investments {t in TIME};
+param electric_cost {t in TIME};
+param total_electric_cost;
+param total_electric_cost_1995to2045;
+let {k in TECH, t in TIME} tech_cost[k,t] := 1000 *
+	if ord(t)=1 then
+		if (exper[k,t]-start_exper[k]) < .0001 then 0 else
+			cum_invcost[k,t] / (exper[k,t]-start_exper[k])
+	else if (exper[k,t]-exper[k,prev(t)]) < .0001 then 0 else
+		(cum_invcost[k,t] - cum_invcost[k,prev(t)]) /
+			 (exper[k,t]-exper[k,prev(t)]);
+display tech_cost;
+
+display {f in FUEL, t in TIME} sum {R in REGION} fuel_use[f,R,t];
+display {f in FUEL, t in TIME} sum {R in REGION} non_electric_use[f,R,t];
+display fuel_use;
+display non_electric_use;
+#display expected_use;
+#display {f in FUEL, r in REGION, t in TIME} expected_use[f,r,t]-non_electric_use[f,r,t];
+#display {f in FUEL, r in REGION} years / 1000 * sum {T in TIME} (expected_use[f,r,T]-non_electric_use[f,r,T]);
+#display {f in FUEL, r in REGION} years / 1000 * sum {T in TIME} fuel_use[f,r,T];
+display fuel_reserves;
+display resources_used;
+display bpfueluse;
+display bpfuelcost;
+let {f in FUEL, r in REGION, t in TIME} electric_fuelcost[f,r,t] := 1e-3 *
+  if f='oil' or f='uran' then
+   (sum {R in REGION} (cum_fuelcost[f,R,t] - if ord(t)=1 then 0 else cum_fuelcost[f,R,prev(t)])) *
+     (sum {R in REGION} fuel_use[f,R,t]) /
+	max(sum {R in REGION} (fuel_use[f,R,t]+non_electric_use[f,R,t]),1e-6)
+  else if f='gas' and (r='north' or r='west') then
+   (cum_fuelcost[f,'north',t]+cum_fuelcost[f,'west',t] - if ord(t)=1 then 0 else cum_fuelcost[f,'north',prev(t)]+cum_fuelcost[f,'west',prev(t)]) *
+     (fuel_use[f,'north',t]+fuel_use[f,'west',t]) / max(fuel_use[f,'north',t]+non_electric_use[f,'north',t]+fuel_use[f,'west',t]+non_electric_use[f,'west',t],1e-6)
+  else if f='ren' then 0 else
+#   (cum_fuelcost[f,r,t] - if ord(t)=1 then 0 else fuelcost[f,r,t]/fuelcost[f,r,prev(t)]*cum_fuelcost[f,r,prev(t)]) *
+   (cum_fuelcost[f,r,t] - if ord(t)=1 then 0 else cum_fuelcost[f,r,prev(t)]) *
+     fuel_use[f,r,t] / max(fuel_use[f,r,t]+non_electric_use[f,r,t],1e-6);
+display electric_fuelcost;
+let {f in FUEL, r in REGION, t in TIME} nonelectric_fuelcost[f,r,t] :=
+  1e-3 * discount / years *
+  if (fuel_use[f,r,t]+non_electric_use[f,r,t]) = 0 then 0 else
+  (cum_fuelcost[f,r,t] - if ord(t)=1 then 0 else cum_fuelcost[f,r,prev(t)]) *
+	non_electric_use[f,r,t] / (fuel_use[f,r,t]+non_electric_use[f,r,t]);
+display nonelectric_fuelcost;
+let {t in TIME} investments[t] := sum {k in TECH} (
+	cum_invcost[k,t] - if ord(t)=1 then 0 else cum_invcost[k,prev(t)]);
+#let {f in FUEL, r in REGION, t in TIME} fuelprices[f,r,t] :=
+#  1e3 / years * electric_fuelcost[f,r,t] /
+#	if f='oil' or f='uran' then
+#		max(sum {R in REGION} fuel_use[f,R,t], .000001)
+#	else if f='gas' and (r='north' or r='west') then
+#		max(fuel_use[f,'north',t]+fuel_use[f,'west',t], .000001)
+#	else max(fuel_use[f,r,t], .000001);
+#let {f in FUEL, r in REGION, t in TIME} fuelprices[f,r,t] := 1/years*
+#  if f='oil' or f='uran' then
+#   (sum {R in REGION} (cum_fuelcost[f,R,t] - if ord(t)=1 then 0 else cum_fuelcost[f,R,prev(t)])) /
+#   	max(sum {R in REGION} (fuel_use[f,R,t]+non_electric_use[f,R,t]),1e-6)
+#  else if f='gas' and (r='north' or r='west') then
+#   (cum_fuelcost[f,'north',t]+cum_fuelcost[f,'west',t] - if ord(t)=1 then 0 else cum_fuelcost[f,'north',prev(t)]+cum_fuelcost[f,'west',prev(t)]) /
+#	max(fuel_use[f,'north',t]+non_electric_use[f,'north',t]+fuel_use[f,'west',t]+non_electric_use[f,'west',t],1e-6)
+#  else
+#   (cum_fuelcost[f,r,t] - if ord(t)=1 then 0 else cum_fuelcost[f,r,prev(t)]) /
+#     	max(fuel_use[f,r,t]+non_electric_use[f,r,t],1e-6);
+#display fuelprices;
+#display fuelcost;
+display investments;
+display cost;
+let {t in TIME} electric_cost[t]  :=
+	cost[t] - sum {F in FUEL, R in REGION} nonelectric_fuelcost[F,R,t];
+display electric_cost;
+let total_electric_cost := sum {T in TIME} electric_cost[T] / (1+dr)^(T-time0);
+display total_electric_cost;
+let total_electric_cost_1995to2045 := sum {T in TIME: T <= 2045} electric_cost[T] / (1+dr)^(T-time0);
+display total_electric_cost_1995to2045;
+display total_cost;
+
+#let {k in TECH, t in TIME} cum_invcost[k,t] :=
+#	base_invcost[k]*start_exper[k]/(1-learning_index[k]) / 1000 *
+#		( (exper[k,t]/start_exper[k])^(1-learning_index[k]) - 1 );
+#let {t in TIME} cost[t] :=
+#	1e-3 * discount * sum {R in REGION} (
+#	    sum {K in TECH} (
+#		fixed_cost[K] * capacity[K,R,t] +
+#		var_cost[K] * electricity[K,R,t] ) +
+#	    sum {F in FUEL: F != 'ren'} 1 / years *
+#		if ord(t)=1 then cum_fuelcost[F,R,t] else
+#		cum_fuelcost[F,R,t] - cum_fuelcost[F,R,prev(t)]  ) +
+#	sum {K in TECH} (1-salvage[K,t]) *
+#		if ord(t) = 1 then cum_invcost[K,t] else
+#		cum_invcost[K,t] - cum_invcost[K,prev(t)];
+##display cum_invcost;
+#display total_cost;

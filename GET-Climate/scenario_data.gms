@@ -1,0 +1,10 @@
+scalar input_use_H2         /    1.00 /;
+scalar input_max_cost       /  999.00 /;
+scalar input_max_storage    / 2000.00 /;
+scalar input_max_beccs      /    1.00 /;
+scalar input_bio_potential  /  200.00 /;
+scalar input_lambda         /    0.80 /;
+scalar input_max_temp       /    7.00 /;
+scalar input_tax_start      /  500.00 /;
+scalar input_tax_growth     /    0.06 /;
+scalar abort_solve_status /    5.00 /;

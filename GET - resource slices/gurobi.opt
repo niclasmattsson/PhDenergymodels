@@ -1,0 +1,7 @@
+method 2
+threads 4
+scaleflag 2
+presolve 2
+*barorder 1
+*crossover 1
+*crossoverbasis 1

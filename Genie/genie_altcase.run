@@ -1,0 +1,13 @@
+include options.run;
+
+option log_file 'log_altcase.log';
+
+model genie.mod;
+data genie.dat;
+
+subject to newbound1 {t in TIME}: exper['fc',t] <= 10;
+subject to newbound2 {t in TIME}: exper['pv',t] <= 10;
+
+solve;
+
+include output.run;

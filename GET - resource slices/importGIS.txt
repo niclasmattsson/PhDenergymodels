@@ -1,0 +1,18 @@
+par=caplimit_windonshoreA rng="Wind classes!a2" Rdim=1 Cdim=1
+par=caplimit_windonshoreB rng="Wind classes!o2" Rdim=1 Cdim=1
+par=caplimit_windoffshore rng="Wind classes!a19" Rdim=1 Cdim=1
+par=caplimit_pvrooftop rng="Solar classes!a2" Rdim=1 Cdim=1
+par=caplimit_pvplantA rng="Solar classes!a19" Rdim=1 Cdim=1
+par=caplimit_pvplantB rng="Solar classes!o19" Rdim=1 Cdim=1
+par=caplimit_cspplantA rng="Solar classes!a36" Rdim=1 Cdim=1
+par=caplimit_cspplantB rng="Solar classes!o36" Rdim=1 Cdim=1
+par=lf_windonshoreA rng=CF_windonshoreA!a2 Rdim=2 Cdim=1
+par=lf_windonshoreB rng=CF_windonshoreB!a2 Rdim=2 Cdim=1
+par=lf_windoffshore rng=CF_windoffshore!a2 Rdim=2 Cdim=1
+par=lf_pvrooftop rng=CF_pvrooftop!a2 Rdim=2 Cdim=1
+par=lf_pvplantA rng=CF_pvplantA!a2 Rdim=2 Cdim=1
+par=lf_pvplantB rng=CF_pvplantB!a2 Rdim=2 Cdim=1
+par=lf_cspplantA rng=CF_cspplantA!a2 Rdim=2 Cdim=1
+par=lf_cspplantB rng=CF_cspplantB!a2 Rdim=2 Cdim=1
+par=lng rng="Slice length!a8" Rdim=1 Cdim=1
+par=storage_slice_transfer_times rng="Storage slices!a2" Rdim=3 Cdim=1

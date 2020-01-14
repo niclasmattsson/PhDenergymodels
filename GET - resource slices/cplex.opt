@@ -1,0 +1,36 @@
+lpmethod 4
+threads 4
+*solutiontype 2
+barcrossalg -1
+*memoryemphasis 1
+
+epopt 1e-9
+eprhs 1e-9
+scaind 1
+*parallelmode -1
+EpMrk 0.9
+NumericalEmphasis 1
+*dpriind 4
+*ppriind 1
+
+*aggind 10
+*aggind 10 caused unscaled infeasibilities at higher number of slices (previously)
+*aggfill 7
+
+*advind 0
+
+*baralg 2
+*barcrossalg 2
+
+*feasopt 0
+*feasoptmode 1
+
+*equation.feaspref 0
+*variable.feaspref 0
+
+*capital_Q.feaspref 0
+*capital_lim_Q.feaspref 0
+*supply_1_Q.feaspref 0
+*supply_2_Q.feaspref 0
+
+*supply_loop_Q.feaspref 0

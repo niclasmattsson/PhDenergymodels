@@ -1,0 +1,12 @@
+include options.run;
+
+option log_file 'log_formulation3.log';
+
+option cplex_options $cplex_options ' sos2=0';
+
+model genie_formulation3.mod;
+data genie.dat;
+
+solve;
+
+include output.run;

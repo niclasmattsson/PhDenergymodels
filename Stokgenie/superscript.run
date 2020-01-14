@@ -1,0 +1,79 @@
+option solver cplex;
+option log_file 'log_all.log';
+
+option cplex_auxfiles c;
+option show_stats 1;
+
+model stokgenie.mod;
+data stokgenie2000.dat;
+#option auxfiles cr;
+#write mut;
+
+#fix {k in TECH, t in TIME, s in SCEN} gamma[k,t,s] :=
+#	if (k = 'pv' or k = 'fc') and t >= 2015 then 1 else 0;
+
+#fix {r in REGION, t in TIME, s in SCEN} invest['nuclear',r,t,s] := 0;
+#fix {r in REGION, t in TIME, s in SCEN} invest['fc',r,t,s] := 0;
+#fix {r in REGION, t in TIME, s in SCEN} invest['gas',r,t,s] := 0;
+#fix {r in REGION, t in TIME, s in SCEN} invest['pv',r,t,s] := 0;
+#fix {r in REGION, t in TIME, s in SCEN} invest['pvh2',r,t,s] := 0;
+#subject to newbound {t in TIME: t > 2040}: co2_emissions[t] <= 0;	#5.8
+#subject to newbound1 {s in SCEN}: exper['fc',2015,s] >= 50.05;
+#subject to newbound2 {s in SCEN}: exper['pv',2015,s] >= 50.05;
+
+#subject to newbound1 {s in SCEN}: delta['pv',last(TIME),4,s] := 1;
+#fix {s in SCEN} delta['fc',last(TIME),4,s] := 1;
+#subject to new2 {k in TECH, t in TIME, p in 1..npieces[k], s in SCEN: s !='hihi'}:
+# delta[k,t,p,s] = delta[k,t,p,'hihi'];
+
+param tech_cost {k in TECH, t in TIME, s in SCEN};
+param basefuelcost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param extrafuelcost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param extra_fuel_cost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param fuelcost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param investments {t in TIME, s in SCEN};
+param thresholdyear {k in TECH: threshold[k] > 0};
+param wc1;
+param wc2;
+param infovalue;
+
+option print_round 2;
+
+option substout 1;
+option linelim 1;
+
+for {probpv in {.01,.1,.25,.5,.75,.9,.99}} {
+for {probfc in {.01,.1,.25,.5,.75,.9,.99}} {
+#for {probpv in {.75}} {
+#for {probfc in {.5}} {
+
+option presolve_eps 1e-9;
+#option mip_priorities '!quit delta 11 gamma1 5 gamma2 23 gamma3 5 gamma4 5 gamma5 5 gamma6 5';
+#option mip_priorities '!quit delta 23 deltapv 23 deltafc 30 gamma 11';
+#option mip_priorities '!quit delta 23 gamma 11';
+
+let probability['hihi'] := probpv*probfc;
+let probability['hilo'] := probpv*(1-probfc);
+let probability['lohi'] := (1-probpv)*probfc;
+let probability['lolo'] := (1-probpv)*(1-probfc);
+
+let threshold['pv'] := 50;
+let threshold['fc'] := 50;
+
+#option cplex_options 'prestats=1 pgradient=4 timing=1 mipgap=1e-6 mipdisplay=2 mipinterval=3 backtrack=.01 varsel=3 nodes=100000000 time=3600 aggregate=10 agglim=10000 scale=1 nodefile=0'; # uppercutoff=9213';
+option cplex_options 'prestats=1 mipgap=1e-6 mipdisplay=2 nodes=100000000 time=600';
+solve;
+
+let wc1 := weighted_cost;
+include stokgenieprint_short.run;
+
+let {k in TECH: threshold[k] > 0} thresholdyear[k] := min {T in TIME, S in SCEN: gamma[k,T,S] > 0} T;
+display probpv;
+display probfc;
+display thresholdyear;
+
+print probpv, probfc, thresholdyear['pv'], thresholdyear['fc'], wc1 >> superout.txt;
+#printf "Probabilities: %d %d  Thresholds: %d %d\n", probpv, probfc, thresholdyear['pv'], thresholdyear['fc'];
+
+};
+};

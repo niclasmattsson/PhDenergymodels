@@ -1,0 +1,10 @@
+include options.run;
+
+option log_file 'log.log';
+
+model genie.mod;
+data genie.dat;
+
+solve;
+
+include output.run;

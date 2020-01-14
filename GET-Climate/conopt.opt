@@ -1,0 +1,10 @@
+*dohess = false
+rtnwma = 1e-6
+
+**lstcrs = true
+**lslack = true
+**lsesqp = false
+
+*lmmxsf = 1
+*lsmxbs = false
+

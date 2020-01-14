@@ -1,0 +1,14 @@
+threads 1
+lpmethod 4
+scaind 1
+epopt 1e-9
+eprhs 1e-9
+
+
+feasopt 0
+feasoptmode 1
+
+capital_Q.feaspref 0
+capital_lim_Q.feaspref 0
+supply_1_Q.feaspref 0
+supply_2_Q.feaspref 0

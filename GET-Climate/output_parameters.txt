@@ -1,0 +1,50 @@
+epsout=0 par=transp_energy rng=transp_modes!
+epsout=0 par=total_system_cost rng=diverse!a1:a1
+epsout=0 par=energy_system_cost rng=diverse!f1:f1
+epsout=0 par=fertilization rng=diverse!j1:j1
+epsout=0 par=report_c rng=diverse!a3
+epsout=0 par=report_capital rng=capital!
+epsout=0 par=report_en_conv rng=energy!
+epsout=0 par=report_invest rng=invest!
+epsout=0 par=report_transport_fuels rng=transport!a50
+epsout=0 par=report_transport_carriers rng=transport!a60
+epsout=0 par=report_transport_modes rng=transport!a70
+epsout=0 par=report_transport_car_energy rng=transport!a85
+epsout=0 par=report_transport_car_type rng=transport!a95
+epsout=0 par=report_transport_airfuel rng=transport!a105
+epsout=0 par=report_transport_energy rng=transp_details!
+epsout=0 par=report_engines rng=engines!
+epsout=0 par=urban_heat rng=central_heat!a50
+epsout=0 par=rural_heat rng=local_heat!a50
+epsout=0 par=feed_stock rng=industry!a50
+epsout=0 par=solid_heat rng=industry!a60
+epsout=0 par=non_solid_heat rng=industry!a80
+epsout=0 par=h2 rng=h2!a50
+epsout=0 par=h2_use rng=h2!b65
+epsout=0 par=MeOH rng=MeOH!a50
+epsout=0 par=MeOHuse rng=MeOH!a60
+epsout=0 par=end_use_price rng=end_use!
+epsout=0 par=trsp_price rng=trsp_price!
+epsout=0 par=demand_out rng=demand!
+epsout=0 par=biomass rng=biomass_use!a50
+epsout=0 par=beccs_use rng=BECCS!a50
+epsout=0 par=prices rng=prices!
+epsout=0 par=ccs rng=CCS_sectors!a50
+epsout=0 par=ccs_source rng=CCS_sectors!a61
+epsout=0 par=emission rng=emis_sector!a1:z20
+epsout=0 par=transp_km rng=transp_km!
+epsout=0 par=GHGemissions rng=emissions!a50
+epsout=0 par=GHGanthro rng=emissions!f50
+epsout=0 par=GHGabatement rng=emissions!l50 cdim=2 rdim=1
+epsout=0 par=GHGbaseline rng=emissions!l84 cdim=2 rdim=1
+epsout=0 par=GHGabatementfactor rng=emissions!l118 cdim=2 rdim=1
+epsout=0 par=GHGconc rng=GHGconc!a50
+epsout=0 par=GHGrf rng=GHGconc!f50
+epsout=0 par=GHG_1 rng=GHGconc!o50
+epsout=0 par=parTemperature rng=temp!a50:d150
+epsout=0 par=parTemperature_1 rng=temp!f50:j581
+epsout=0 par=balances rng=balances!
+epsout=0 par=elec rng=elec!a50
+epsout=0 par=report_supply1 rng=supply!a50
+epsout=0 par=ccs_primary_energy rng=supply!a70
+

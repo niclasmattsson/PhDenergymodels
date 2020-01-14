@@ -1,0 +1,100 @@
+option display_round 2;
+display exper;
+display gamma;
+display {s in SCEN, t in TIME}: {k in TECH, p in 1..npieces[k]} lambda[k,t,p,s];
+display {s in SCEN, t in TIME}: {k in TECH, p in 1..npieces[k]} delta[k,t,p,s];
+#display {s in SCEN, t in TIME}: {k in TECH, p in 1..npieces[k]} (if ord(t)=1 then delta1[k,p,s] else if ord(t)=2 #then delta2[k,p,s] else if ord(t)=3 then delta3[k,p,s] else if ord(t)=4 then delta4[k,p,s] else if ord(t)=5 then #delta5[k,p,s] else delta6[k,p,s]);
+
+#display bpcuminvcost;
+
+#display sum {T in TIME} cost[T] / (1+dr)^(T-time0);
+
+option display_1col 0;
+option display_eps 1e-4;
+
+option display_round 2;
+
+display demand;
+display {k in TECH, t in TIME, s in SCEN}
+	sum {R in REGION} electricity[k,R,t,s];
+display {k in TECH, t in TIME, s in SCEN} sum {R in REGION} capacity[k,R,t,s];
+#display {k in TECH, t in TIME, s in SCEN} sum {R in REGION} invest[k,R,t,s];
+display electricity;
+display capacity;
+#display invest;
+display cum_fuelcost;
+display co2_emissions;
+display {s in SCEN} sum {t in TIME} years * co2_emissions[t,s];
+display bpexper;
+display bpinvcost;
+display bpcuminvcost;
+display cum_invcost;
+let {k in TECH, t in TIME, s in SCEN} tech_cost[k,t,s] := 1000 *
+	if ord(t)=1 then
+		if (exper[k,t,s]-start_exper[k]) < .0001 then 0 else
+			cum_invcost[k,t,s] / (exper[k,t,s]-start_exper[k])
+	else if (exper[k,t,s]-exper[k,prev(t),s]) < .0001 then 0 else
+		(cum_invcost[k,t,s] - cum_invcost[k,prev(t),s]) /
+			 (exper[k,t,s]-exper[k,prev(t),s]);
+display tech_cost;
+
+display {f in FUEL, t in TIME, s in SCEN} sum {R in REGION} fuel_use[f,R,t,s];
+display {f in FUEL, t in TIME, s in SCEN} sum {R in REGION} non_electric_use[f,R,t];
+display fuel_use;
+display non_electric_use;
+display fuel_reserves;
+display resources_used;
+display bpfueluse;
+display bpfuelcost;
+display base_fuel_cost;
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} extra_fuel_cost[f,r,t,s] :=
+  1 / years /
+  (if f='gas' and (r='north' or r='west') then max(fuel_use[f,'north',t,s]+fuel_use[f,'west',t,s],.0001)
+  else if f='uran' then max((sum {R in REGION} fuel_use[f,R,t,s]),.0001) else max(fuel_use[f,r,t,s],.0001)) *
+  if ord(t)=1 then 
+	(if f='gas' and (r='north' or r='west') then cum_fuelcost[f,'north',t,s]+cum_fuelcost[f,'west',t,s]
+	else if f='uran' then sum {R in REGION} cum_fuelcost[f,R,t,s] else cum_fuelcost[f,r,t,s])
+  else
+	(if f='gas' and (r='north' or r='west') then cum_fuelcost[f,'north',t,s]-cum_fuelcost[f,'north',prev(t),s] +
+		cum_fuelcost[f,'west',t,s]-cum_fuelcost[f,'west',prev(t),s]
+	else if f='uran' then sum {R in REGION} (cum_fuelcost[f,R,t,s]-cum_fuelcost[f,R,prev(t),s])
+	else cum_fuelcost[f,r,t,s]-cum_fuelcost[f,r,prev(t),s]);
+display extra_fuel_cost;
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} basefuelcost[f,r,t,s] :=
+	1e-3 * discount * base_fuel_cost[f,r,t] * fuel_use[f,r,t,s];
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} extrafuelcost[f,r,t,s] :=
+	1e-3 * discount / years * if ord(t)=1 then cum_fuelcost[f,r,t,s] else
+			cum_fuelcost[f,r,t,s] - cum_fuelcost[f,r,prev(t),s];
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} fuelcost[f,r,t,s] :=
+	basefuelcost[f,r,t,s] + extrafuelcost[f,r,t,s];
+display basefuelcost;
+display extrafuelcost;
+display fuelcost;
+let {t in TIME, s in SCEN} investments[t,s] := sum {k in TECH} (
+	cum_invcost[k,t,s] - if ord(t)=1 then 0 else cum_invcost[k,prev(t),s]);
+display investments;
+display cost;
+display probability;
+display total_cost;
+#display theta;
+display weighted_cost;
+let {k in TECH, t in TIME, s in SCEN} cum_invcost[k,t,s] :=
+	base_invcost[k]*start_exper[k]/(1-learning_index[k,s]) / 1000 * 
+		( (exper[k,t,s]/start_exper[k])^(1-learning_index[k,s]) - 1 );
+let {t in TIME, s in SCEN} cost[t,s] :=
+	1e-3 * discount * sum {R in REGION} (
+	    sum {K in TECH} (
+		fixed_cost[K] * capacity[K,R,t,s] +
+		var_cost[K] * electricity[K,R,t,s] ) +
+	    sum {F in FUEL: F != 'ren'} (
+		base_fuel_cost[F,R,t] * fuel_use[F,R,t,s] +
+		1 / years * if ord(t)=1 then cum_fuelcost[F,R,t,s] else
+			cum_fuelcost[F,R,t,s] - cum_fuelcost[F,R,prev(t),s]  )
+	) + sum {K in TECH} (1-salvage[K,t]) *
+		if ord(t) = 1 then cum_invcost[K,t,s] else
+		cum_invcost[K,t,s] - cum_invcost[K,prev(t),s];
+#display cum_invcost;
+let {s in SCEN} total_cost[s] := sum {T in TIME} cost[T,s] / (1+dr)^(T-time0);
+display total_cost;
+#display theta;
+display weighted_cost;

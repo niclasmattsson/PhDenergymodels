@@ -1,0 +1,6 @@
+par=dem_base rng=demand!a1:s9 Rdim=1 Cdim=1
+par=init_capital rng=Capital-2000!a25:d50 Rdim=2 Cdim=1
+par=init_energy rng=Capital-2000!g25:j50 Rdim=2 Cdim=1
+par=trsp_demand_base rng=transport!a1:r10 Rdim=1 Cdim=1
+par=num_veh rng=cars!a1:s4 Rdim=1 Cdim=1
+par=scenario rng=atmos!a1:o4 Rdim=1 Cdim=1

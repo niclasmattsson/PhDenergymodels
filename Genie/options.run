@@ -1,0 +1,37 @@
+option solver cplex;
+
+option cplex_options 'prestats=1 mipgap=1e-9'; # pgradient=1 timing=1 mipgap=1e-9';
+option cplex_options $cplex_options ' mipdisplay=2'; # mipinterval=1';
+#option cplex_options $cplex_options ' varsel=3';
+option cplex_options $cplex_options ' nodes=10000000 time=259200';
+
+#option cplex_options $cplex_options ' startbasis zzout1.bas';
+#option cplex_options $cplex_options ' endbasis zzout2.bas';
+#option cplex_options $cplex_options ' starttree zzout5.tre';
+#option cplex_options $cplex_options ' endtree zzout23.tre';
+#option cplex_options $cplex_options ' mipgap=1e-9';
+#option cplex_options $cplex_options ' cliques=2 covers=2';
+#option cplex_options $cplex_options ' disjcuts=-1 fraccuts=-1';
+#option cplex_options $cplex_options ' mircuts=1 fraccuts=1';
+#option cplex_options $cplex_options ' mipsearch=2 mipemphasis=3';
+#option cplex_options $cplex_options ' backtrack=1';
+#option cplex_options $cplex_options ' branch=1';
+#option cplex_options $cplex_options ' mipsolutions=1';
+#option cplex_options $cplex_options ' nodesel=2';
+#option cplex_options $cplex_options ' uppercutoff=26000';
+#option cplex_options $cplex_options ' plconpri=0 plobjpri=0';
+#option cplex_options $cplex_options ' sosscan=1 sosmin=4';
+#option cplex_options $cplex_options ' aggregate=1 agglim=10000';
+#option cplex_options $cplex_options ' presolve=0';
+#option presolve 0;
+#option mip_priorities '!quit delta1 23 delta2 21 delta3 19 delta4 17 delta5 15 delta6 13 delta7 11 delta8 9 delta9 7 delta10 5 delta11 3 delta12 1';
+#option mip_priorities '!quit delta1 15 delta2 19 delta3 23 delta4 21 delta5 17 delta6 13 delta7 11 delta8 9 delta9 7 delta10 5 delta11 3 delta12 1';
+#option mip_priorities '!quit delta1 33 delta2 35 delta3 37 delta4 39 delta5 41 delta6 43 delta7 11 delta8 9 delta9 7 delta10 5 delta11 3 delta12 1';
+#option mip_priorities '!quit gamma1 23 gamma2 22 gamma3 21 gamma4 20 gamma5 19 gamma6 18 gamma7 17 gamma8 16 gamma9 15 gamma10 14 gamma11 13 gamma12 12 gamma13 11 gamma14 10 gamma15 9 gamma16 8 gamma17 7 gamma18 6 gamma19 5 gamma20 4';
+#option mip_priorities '!quit gamma1 1 gamma2 2 gamma3 3 gamma4 4 gamma5 5 gamma6 6 gamma7 7 gamma8 8 gamma9 9 gamma10 10 gamma11 11 gamma12 12 gamma13 13 gamma14 14 gamma15 15 gamma16 16 gamma17 17 gamma18 18 gamma19 19 gamma20 20';
+
+option cplex_auxfiles c;
+option show_stats 1;
+
+option display_1col 0;
+option display_eps 1e-4;

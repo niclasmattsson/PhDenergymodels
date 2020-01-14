@@ -1,0 +1,8 @@
+option display_round 2;
+display exper;
+display gamma;
+
+let {s in SCEN} total_cost[s] := sum {T in TIME} cost[T,s] / (1+dr)^(T-time0);
+display total_cost;
+#display theta;
+display weighted_cost;

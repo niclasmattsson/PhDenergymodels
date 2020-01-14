@@ -1,0 +1,159 @@
+option solver cplex;
+option log_file 'log.log';
+option cplex_options 'prestats=1 mipgap=1e-9'; # pgradient=1 timing=1
+option cplex_options $cplex_options ' mipdisplay=2'; # mipinterval=5';
+#option cplex_options $cplex_options ' startbasis zzbas2.bas';
+#option cplex_options $cplex_options ' endbasis zzbas4.bas';
+#option cplex_options $cplex_options ' starttree zztree2.tre';
+#option cplex_options $cplex_options ' endtree zztree4.tre';
+#option cplex_options $cplex_options ' mipgap=1e-9';
+#option cplex_options $cplex_options ' cliques=1 covers=1';
+#option cplex_options $cplex_options ' backtrack=.0';
+#option cplex_options $cplex_options ' ordertype=2';
+#option cplex_options $cplex_options ' branch=1';
+#option cplex_options $cplex_options ' mipsolutions=1';
+#option cplex_options $cplex_options ' nodesel=2 bbinterval=1';
+#option cplex_options $cplex_options ' varsel=3 strongcand=20 strongit=0 scale=0';
+#option cplex_options $cplex_options ' uppercutoff=9246';
+option cplex_options $cplex_options ' nodes=100000000 time=1209600';
+#option cplex_options $cplex_options ' plconpri=0 plobjpri=0';
+#option cplex_options $cplex_options ' sosscan=1 sosmin=4';
+#option cplex_options $cplex_options ' aggregate=1 aggfill=10000';
+#option cplex_options $cplex_options ' presolve=1';
+option presolve 1;
+option substout 1;
+option linelim 1;
+#option mip_priorities '!quit gamma 23 delta 10';
+#option mip_priorities '!quit delta1 23 delta2 21 delta3 19 delta4 17 delta5 15 delta6 13 delta7 11 delta8 9 delta9 7 delta10 5 delta11 3 delta12 1';
+#option mip_priorities '!quit delta1 15 delta2 19 delta3 23 delta4 21 delta5 17 delta6 13 delta7 11 delta8 9 delta9 7 delta10 5 delta11 3 delta12 1';
+#option mip_priorities '!quit delta1 33 delta2 35 delta3 37 delta4 39 delta5 41 delta6 43 delta7 11 delta8 9 delta9 7 delta10 5 delta11 3 delta12 1';
+#option mip_priorities '!quit gamma1 23 gamma2 22 gamma3 21 gamma4 20 gamma5 19 gamma6 18 gamma7 17 gamma8 16 gamma9 15 gamma10 14 gamma11 13 gamma12 12 gamma13 11 gamma14 10 gamma15 9 gamma16 8 gamma17 7 gamma18 6 gamma19 5 gamma20 4';
+#option mip_priorities '!quit gamma1 1 gamma2 2 gamma3 3 gamma4 4 gamma5 5 gamma6 6 gamma7 7 gamma8 8 gamma9 9 gamma10 10 gamma11 11 gamma12 12 gamma13 13 gamma14 14 gamma15 15 gamma16 16 gamma17 17 gamma18 18 gamma19 19 gamma20 20';
+option cplex_auxfiles c;
+option show_stats 1;
+
+option display_1col 0;
+option display_eps 1e-4;
+
+model stokgenie.mod;
+data stokgenie2000.dat;
+#option auxfiles cr;
+#write mut;
+
+#let {k in TECH} max_exper[k] := max_exper[k] / big;
+
+#let {k in TECH} priority[k] := 1;
+#display priority;
+#subject to new {k in TECH: progress_ratio[k]<1}: priority[k] >= 1;
+
+#subject to newbound: sum {r in REGION} capacity['pv',r,2050] >= 5000;
+#subject to newbound: sum {r in REGION} capacity['pv',r,2030] >= 2910;
+#subject to newbound {s in SCEN, t in TIME: t>2020}: co2_emissions[t,s] <= 0;
+#subject to newbound: sum {t in TIME} co2_emissions[t] <= 5848*6;
+#fix {r in REGION, t in TIME, s in SCEN} invest['pv',r,t,s] := 0;
+#fix {r in REGION, t in TIME, s in SCEN} invest['nuclear',r,t,s] := 0;
+#fix {r in REGION, t in TIME: t >= 2025} electricity['nuclear',r,t] := 0;
+#fix {r in REGION, t in TIME} invest['pv',r,t] := 0;
+#fix {r in REGION, t in TIME} invest['pvh2',r,t] := 0;
+
+#let dr := .03;
+#let {f in FUEL, r in REGION} non_electric_start[f,r] := 0;
+
+#subject to newbound1: exper['pv',2040] >= 6000;
+#subject to newbound1: exper['pv',2025] >= 786;
+#subject to newbound2: exper['pv',2035] >= 2000;
+#subject to newbound3: exper['pv',2045] >= 5000;
+#subject to newbound4: exper['fc',2025] >= 786;
+#subject to newbound5: exper['fc',2035] >= 1500;
+#subject to newbound1: exper['pvh2',2065] >= 30000;
+#subject to newbound2: exper['pv',2035] >= 10835;
+#subject to newbound3: exper['pv',2045] >= 23000;
+#subject to newbound2: exper['fc',2055] >= 5000;
+
+solve;
+
+option display_round 2;
+display exper;
+
+#display bpcuminvcost;
+
+#display sum {T in TIME} cost[T] / (1+dr)^(T-time0);
+
+option display_1col 0;
+option display_eps 1e-4;
+
+option display_round 2;
+
+display demand;
+display {k in TECH, t in TIME, s in SCEN}
+	sum {R in REGION} electricity[k,R,t,s];
+display {k in TECH, t in TIME, s in SCEN} sum {R in REGION} capacity[k,R,t,s];
+#display {k in TECH, t in TIME, s in SCEN} sum {R in REGION} invest[k,R,t,s];
+display electricity;
+display capacity;
+#display invest;
+display cum_fuelcost;
+display co2_emissions;
+display {s in SCEN} sum {t in TIME} years * co2_emissions[t,s];
+display bpexper;
+display bpinvcost;
+display bpcuminvcost;
+display cum_invcost;
+param tech_cost {k in TECH, t in TIME, s in SCEN};
+param basefuelcost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param extrafuelcost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param fuelcost {f in FUEL, r in REGION, t in TIME, s in SCEN};
+param investments {t in TIME, s in SCEN};
+let {k in TECH, t in TIME, s in SCEN} tech_cost[k,t,s] := 1000 *
+	if ord(t)=1 then
+		if (exper[k,t,s]-start_exper[k]) < .0001 then 0 else
+			cum_invcost[k,t,s] / (exper[k,t,s]-start_exper[k])
+	else if (exper[k,t,s]-exper[k,prev(t),s]) < .0001 then 0 else
+		(cum_invcost[k,t,s] - cum_invcost[k,prev(t),s]) /
+			 (exper[k,t,s]-exper[k,prev(t),s]);
+display tech_cost;
+
+display {f in FUEL, t in TIME, s in SCEN} sum {R in REGION} fuel_use[f,R,t,s];
+display {f in FUEL, t in TIME, s in SCEN} sum {R in REGION} non_electric_use[f,R,t];
+display fuel_use;
+display non_electric_use;
+display fuel_reserves;
+display resources_used;
+display bpfueluse;
+display bpfuelcost;
+display base_fuel_cost;
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} basefuelcost[f,r,t,s] :=
+	1e-3 * discount * base_fuel_cost[f,r,t] * fuel_use[f,r,t,s];
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} extrafuelcost[f,r,t,s] :=
+	1e-3 * discount / years * if ord(t)=1 then cum_fuelcost[f,r,t,s] else
+			cum_fuelcost[f,r,t,s] - cum_fuelcost[f,r,prev(t),s];
+let {f in FUEL, r in REGION, t in TIME, s in SCEN} fuelcost[f,r,t,s] :=
+	basefuelcost[f,r,t,s] + extrafuelcost[f,r,t,s];
+display basefuelcost;
+display extrafuelcost;
+display fuelcost;
+let {t in TIME, s in SCEN} investments[t,s] := sum {k in TECH} (
+	cum_invcost[k,t,s] - if ord(t)=1 then 0 else cum_invcost[k,prev(t),s]);
+display investments;
+display cost;
+display total_cost;
+display weighted_cost;
+let {k in TECH, t in TIME, s in SCEN} cum_invcost[k,t,s] :=
+	base_invcost[k]*start_exper[k]/(1-learning_index[k,s]) / 1000 *
+		( (exper[k,t,s]/start_exper[k])^(1-learning_index[k,s]) - 1 );
+let {t in TIME, s in SCEN} cost[t,s] :=
+	1e-3 * discount * sum {R in REGION} (
+	    sum {K in TECH} (
+		fixed_cost[K] * capacity[K,R,t,s] +
+		var_cost[K] * electricity[K,R,t,s] ) +
+	    sum {F in FUEL: F != 'ren'} (
+		base_fuel_cost[F,R,t] * fuel_use[F,R,t,s] +
+		1 / years * if ord(t)=1 then cum_fuelcost[F,R,t,s] else
+			cum_fuelcost[F,R,t,s] - cum_fuelcost[F,R,prev(t),s]  )
+	) + sum {K in TECH} (1-salvage[K,t]) *
+		if ord(t) = 1 then cum_invcost[K,t,s] else
+		cum_invcost[K,t,s] - cum_invcost[K,prev(t),s];
+#display cum_invcost;
+let {s in SCEN} total_cost[s] := sum {T in TIME} cost[T,s] / (1+dr)^(T-time0);
+display total_cost;
+display weighted_cost;
